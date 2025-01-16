@@ -8,6 +8,8 @@ potential connections, and outputs these insights as a JSON file. The tool is ex
 is designed to support provenance tracking, property writing, and multiple data formats, making it 
 versatile for various graph database implementations.
 
+
+
 Start:
 
 Begins with initializing the DownloadManager class, setting up the configuration and output directory.
@@ -50,7 +52,13 @@ get_parent: Retrieves the parent node in an ontology graph using NetworkX.
 Ontology and Summary:
 
 Offers methods (show_ontology_structure and summary) to display and summarize ontology information via the biocypher library.
-import csv
+
+
+metta and neo4j
+
+writter works they extends the BaseWriter class to handle the creation of MeTTa files based on an ontology schema and configuration. The class provides functionality to construct type hierarchies and data constructors for nodes and edges, derived from an ontology represented as a NetworkX graph. It includes methods for writing nodes and edges into MeTTa files while handling associated properties. The class ensures consistent formatting by converting input labels and escaping special characters. Additionally, it manages file organization with customizable paths and directories for output. Overall, the class integrates ontology mappings and schema definitions into a structured and exportable format for
+
+SECOND QUESTION WHAT IS THE PROBLEM OF THE ISSUES THE PROBLEM IS memory effiencent value processing and data with size andlimit and and File is too big so the chunking processing modifyed by # Finding handling size 
 Solution
 Memory-Efficient Value Processing
 
