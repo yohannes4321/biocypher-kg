@@ -112,7 +112,7 @@ Key Features:
 Deduplication: Ensures no redundant edges by comparing scores.
 Provenance: Adds metadata about the data source.
 Scalable: Processes large, compressed TSV files efficiently.
-
+![Alt text](/Section 1.png)
 SECOND QUESTION WHAT IS THE PROBLEM OF THE ISSUES THE PROBLEM IS memory effiencent value processing and data with size andlimit and and File is too big so the chunking processing modifyed by # Finding handling size 
 Solution
 Memory-Efficient Value Processing
