@@ -157,3 +157,83 @@ def write_to_csv(self, data_iterator, file_path, chunk_size=1000):
         # Write any remaining data
         if current_chunk:
             self.write_chunk(current_chunk, headers, file_path, self.csv_delimiter, self.preprocess_value)
+
+
+def process_and_save_to_csv(self, records_iterator, output_path, batch_size=1000):
+    # Initialize the first batch and gather headers
+    initial_batch = []
+    column_headers = set()
+
+    for idx, record in enumerate(records_iterator):
+        if idx < batch_size:
+            column_headers.update(record.keys())
+            initial_batch.append(record)
+        else:
+            break
+
+    column_headers = sorted(list(column_headers))
+    if 'identifier' in column_headers:
+        column_headers.remove('identifier')
+        column_headers = ['identifier'] + column_headers
+
+    # Write column headers to the file
+    with open(output_path, 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=self.csv_separator)
+        csv_writer.writerow(column_headers)
+
+    # Write the first batch of records
+    self.write_batch_to_csv(
+        initial_batch, column_headers, output_path, self.csv_separator, self.process_field
+    )
+
+    # Process the remaining records in chunks
+    current_batch = []
+    for record in records_iterator:
+        current_batch.append(record)
+        if len(current_batch) >= batch_size:
+            self.write_batch_to_csv(
+                current_batch, column_headers, output_path, self.csv_separator, self.process_field
+            )
+            current_batch = []
+
+    # Handle any leftover records
+    if current_batch:
+        self.write_batch_to_csv(
+            current_batch, column_headers, output_path, self.csv_separator, self.process_field
+        )
+Robust File Management with Context Manager
+Ensuring proper file handling using a reusable context manager:
+
+python
+Copy code
+class CSVHandler:
+    def __init__(self, filepath, separator):
+        self.filepath = filepath
+        self.separator = separator
+        self.file = None
+        self.csv_writer = None
+
+    def __enter__(self):
+        self.file = open(self.filepath, 'a', newline='')
+        self.csv_writer = csv.writer(self.file, delimiter=self.separator)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.file:
+            self.file.close()
+
+    def write_records(self, records):
+        self.csv_writer.writerows(records)
+        self.file.flush()
+Batch Writing Logic with Preprocessing
+Handle batched writing and apply transformations on the fly:
+
+python
+Copy code
+def write_batch_to_csv(self, batch, headers, output_path, csv_separator, process_field):
+    with CSVHandler(output_path, csv_separator) as handler:
+        processed_data = [
+            [process_field(record.get(header, '')) for header in headers]
+            for record in batch
+        ]
+        handler.write_records(processed_data)
