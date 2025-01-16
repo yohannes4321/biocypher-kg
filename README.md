@@ -87,86 +87,30 @@ class CSVHandler:
         self.file.flush()
 
 # Finding handling size 
-class CSVProcessor:
-    
-
-    def __init__(self, delimiter=','):
+class CSVFileHandler:
+    def __init__(self, file_path, delimiter):
+        self.file_path = file_path
         self.delimiter = delimiter
+        self.file = None
+        self.writer = None
 
-    def process_and_write(self, data_stream, filepath, batch_size=1000):
-       
-        first_batch = []
-        column_headers = set()
+    def __enter__(self):
+        self.file = open(self.file_path, 'a', newline='')
+        self.writer = csv.writer(self.file, delimiter=self.delimiter)
+        return self
 
-        # Extract headers and collect the first batch of data
-        for index, record in enumerate(data_stream):
-            if index < batch_size:
-                column_headers.update(record.keys())
-                first_batch.append(record)
-            else:
-                break
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.file:
+            self.file.close()
 
-        # Ensure headers are ordered, with 'id' at the front if present
-        column_headers = sorted(list(column_headers))
-        if 'id' in column_headers:
-            column_headers.remove('id')
-            column_headers = ['id'] + column_headers
+    def write_rows(self, rows):
+        self.writer.writerows(rows)
+        self.file.flush()
 
-        # Write headers and the first batch of data
-        with open(filepath, 'w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file, delimiter=self.delimiter)
-            writer.writerow(column_headers)
-        self._write_batch(first_batch, column_headers, filepath)
-
-        # Process remaining data in batches
-        current_batch = []
-        for record in data_stream:
-            current_batch.append(record)
-            if len(current_batch) >= batch_size:
-                self._write_batch(current_batch, column_headers, filepath)
-                current_batch = []
-
-        # Write any remaining records
-        if current_batch:
-            self._write_batch(current_batch, column_headers, filepath)
-
-    def _write_batch(self, batch, headers, filepath):
-        
-        with CSVHandler(filepath, self.delimiter) as csv_handler:
-            processed_rows = [
-                [self._sanitize_value(record.get(header, '')) for header in headers]
-                for record in batch
-            ]
-            csv_handler.append_rows(processed_rows)
-
-    @staticmethod
-    def _sanitize_value(value):
-        """
-        Sanitize and format values for CSV compatibility.
-        :param value: The value to sanitize.
-        :return: Sanitized value.
-        """
-        if isinstance(value, list):
-            return "[" + ", ".join(f'"{str(item).replace("\"", "").replace("\'", "")}"' for item in value) + "]"
-        if isinstance(value, dict):
-            return "{" + ", ".join(f'"{key}": "{str(val).replace("\"", "").replace("\'", "")}"' for key, val in value.items()) + "}"
-        if isinstance(value, str):
-            return f'"{value.replace("\"", "").replace("\'", "")}"'
-        return value
-
-
-# Example usage
-if __name__ == "__main__":
-    # Example generator to simulate data input
-    def generate_sample_data():
-        for i in range(1, 5000):
-            yield {"id": f"user{i}", "name": f"User {i}", "email": f"user{i}@example.com", "attributes": ["active", "verified"]}
-
-    csv_writer = CSVProcessor(delimiter="|")
-    csv_writer.process_and_write(
-        data_stream=generate_sample_data(),
-        filepath="output.csv",
-        batch_size=500
-    )
+def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
+    with CSVFileHandler(file_path, csv_delimiter) as handler:
+        processed_rows = [[preprocess_value(row.get(header, '')) for header in headers]
+                        for row in chunk]
+        handler.write_rows(processed_rows)
 
 
