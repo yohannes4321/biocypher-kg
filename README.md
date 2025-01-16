@@ -118,54 +118,42 @@ Solution
 Memory-Efficient Value Processing
 
 Memory-efficient value processing with size limits and warnings
+Memory-Efficient Value Processing
 
-class CSVHandler:
-    
-    def __init__(self, filepath, delimiter):
-        self.filepath = filepath
-        self.delimiter = delimiter
-        self.file = None
-        self.csv_writer = None
+Memory-efficient value processing with size limits and warnings
+def write_to_csv(self, data_iterator, file_path, chunk_size=1000):
+    # First chunk to determine headers
+    first_chunk = []
+    headers = set()
+    # for entry in data: # replace
+    for i, entry in enumerate(data_iterator):
+        if i < chunk_size:
+            headers.update(entry.keys())
+            first_chunk.append(entry)
+        else:
+            break
+    headers = sorted(list(headers))
+    if 'id' in headers:
+        headers.remove('id')
+        headers = ['id'] + headers
+    # Write headers
+    with open(file_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=self.csv_delimiter)
+        writer.writerow(headers)
+    #    csvfile.flush()
+    # for i in range(0, len(data), chunk_size):
+    #    chunk = data[i:i+chunk_size]
+    #    self.write_chunk(chunk, headers, file_path, self.csv_delimiter, self.preprocess_value)
 
-    def __enter__(self):
-        self.file = open(self.filepath, 'a', newline='', encoding='utf-8')
-        self.csv_writer = csv.writer(self.file, delimiter=self.delimiter)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.file:
-            self.file.close()
-
-    def append_rows(self, rows):
-        
-        self.csv_writer.writerows(rows)
-        self.file.flush()
-
-# Finding handling size 
-class CSVFileHandler:
-    def __init__(self, file_path, delimiter):
-        self.file_path = file_path
-        self.delimiter = delimiter
-        self.file = None
-        self.writer = None
-
-    def __enter__(self):
-        self.file = open(self.file_path, 'a', newline='')
-        self.writer = csv.writer(self.file, delimiter=self.delimiter)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.file:
-            self.file.close()
-
-    def write_rows(self, rows):
-        self.writer.writerows(rows)
-        self.file.flush()
-
-def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
-    with CSVFileHandler(file_path, csv_delimiter) as handler:
-        processed_rows = [[preprocess_value(row.get(header, '')) for header in headers]
-                        for row in chunk]
-        handler.write_rows(processed_rows)
-
-
+        # Write first chunk
+        self.write_chunk(first_chunk, headers, file_path, self.csv_delimiter, self.preprocess_value)
+        # Process remaining data in chunks
+        current_chunk = []
+        for entry in data_iterator:
+            current_chunk.append(entry)
+            if len(current_chunk) >= chunk_size:
+                self.write_chunk(current_chunk, headers, file_path, self.csv_delimiter, self.preprocess_value)
+                current_chunk = []
+        # Write any remaining data
+        if current_chunk:
+            self.write_chunk(current_chunk, headers, file_path, self.csv_delimiter, self.preprocess_value)
